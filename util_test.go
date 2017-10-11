@@ -20,7 +20,7 @@ func TestCheckKey(t *testing.T) {
 	assert.NotNil(CheckKey("foo_"))
 	assert.NotNil(CheckKey("bar/foo/baz"))
 
-	assert.NotNil(CheckKey(""))
+	assert.NotNil(CheckKey(""), "should error on empty keys")
 
 	superLongDNSPrefixed := fmt.Sprintf("%s/%s", strings.Repeat("a", MaxDNSPrefixLen), strings.Repeat("a", MaxKeyLen))
 	assert.Nil(CheckKey(superLongDNSPrefixed), len(superLongDNSPrefixed))
@@ -35,6 +35,7 @@ func TestCheckKey(t *testing.T) {
 func TestCheckValue(t *testing.T) {
 	assert := assert.New(t)
 
+	assert.Nil(CheckValue(""), "should not error on empty values")
 	assert.Nil(CheckValue("foo"))
 	assert.Nil(CheckValue("bar_baz"))
 	assert.NotNil(CheckValue("_bar_baz"))
