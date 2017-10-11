@@ -10,6 +10,10 @@ notifications:
       - secure: "XqP2QaqQCw88V+pHoEx7c4D1D0ZKH7+Ka1HaROcxo/rRrNQQyJIN0oWXooGzn8l1UKrIMrTn6mOgtitzxo5E0qHeR2Yuv2Hbb0Vk3PXIc/TNbAvHRtplu1i5UBPH1a5Acb0ogXP1OGAmKG2Rf7R4Kqg7A/ChJ0VStD8YsotyUtWYxOmgiOfD38KVkmffTgeggKm0XGz6x570mQdFhBMIfodAX+ewXwFODNqQXWNRYYVzfIgd/QxZOTZurFiHXFuBmvyPvlrtrAUxEO0SIESyDfQUSX6bPTSW3i3vb42s0I9Wxe/mAAd9XsfUShcvu2VFOJa4AIxojhTqIpdREPg+vCh93olsdAf6n3vuMmvhdEG5XByw+2u4DRFdqE5EIEq+Hk6UUaYBkPCtrFMYsROxrqKe5/g6rCpaOLaFg9tYi47uPVSAD2w6Vnaft9xlZncqhgENixm52rSBK56oZQA/1G5T/PjeE4AxxeHrIIEbJ3q3+G3GNFFUPFiMAaYYOCwWVcaI4Ha4x2kY6mkdeaSxT/PpOYP1MmPHpAcKbKr/rRffKBf+zzfGWqnPjUh0M5cXU9Vu8k3IY/pdlRwDtSNF8Ojnn/4dC0n7tkz6G2HGFO/UV3SurB20+slS422j8RhW2Jml/FhBHcRL5IGgT6CxXICKXMVjBKK6J4v+WdaPIVI="
     on_success: always
     on_failure: always
+    template:
+      - "%{repository_slug} %{message} %{duration}"
+      - "%{author} : (<%{compare_url}|%{commit}>) %{commit_message}"
+      - "Build Details: %{build_url}"
 
 before_script:
   - go get -u github.com/blendlabs/go-assert
