@@ -74,3 +74,22 @@ func TestParseIn(t *testing.T) {
 	assert.True(selector.Matches(invalidMissing))
 	assert.False(selector.Matches(invalid), selector.String())
 }
+
+func TestParseGroup(t *testing.T) {
+	assert := assert.New(t)
+
+	valid := Labels{
+		"zoo":   "mar",
+		"moo":   "lar",
+		"thing": "map",
+	}
+	invalid := Labels{
+		"zoo":   "mar",
+		"moo":   "something",
+		"thing": "map",
+	}
+	selector, err := Parse("zoo=mar, moo=lar, thing")
+	assert.Nil(err)
+	assert.True(selector.Matches(valid))
+	assert.False(selector.Matches(invalid))
+}
