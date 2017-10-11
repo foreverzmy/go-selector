@@ -81,7 +81,7 @@ func (l *Lexer) Lex() (Selector, error) {
 			continue
 		}
 
-		// this is the same thing.
+		// these two are effectively the same
 		if l.isTerminator(b) || l.done() {
 			break
 		}
@@ -92,6 +92,7 @@ func (l *Lexer) Lex() (Selector, error) {
 	return selector, nil
 }
 
+// lift starts grouping selectors into a high level `and`, returning the aggregate selector.
 func (l *Lexer) lift(current, next Selector) Selector {
 	if current == nil {
 		return next
