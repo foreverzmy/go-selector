@@ -1,6 +1,8 @@
 go-selector
 ===========
 
+[![Build Status](https://travis-ci.org/blendlabs/go-selector.svg?branch=master)](https://travis-ci.org/blendlabs/go-selector)
+
 Selector is a library that matches as closely as possible the intent and symantics of kubernetes selectors.
 
 ## BNF
