@@ -17,7 +17,7 @@ func (ne NotEquals) Matches(labels Labels) bool {
 
 // Validate validates the selector.
 func (ne NotEquals) Validate() (err error) {
-	err = CheckLabel(ne.Key)
+	err = CheckKey(ne.Key)
 	if err != nil {
 		return
 	}

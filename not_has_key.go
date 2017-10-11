@@ -15,7 +15,7 @@ func (nhk NotHasKey) Matches(labels Labels) bool {
 
 // Validate validates the selector.
 func (nhk NotHasKey) Validate() (err error) {
-	err = CheckLabel(string(nhk))
+	err = CheckKey(string(nhk))
 	return
 }
 

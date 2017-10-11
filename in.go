@@ -29,7 +29,7 @@ func (i In) Matches(labels Labels) bool {
 
 // Validate validates the selector.
 func (i In) Validate() (err error) {
-	err = CheckLabel(i.Key)
+	err = CheckKey(i.Key)
 	if err != nil {
 		return
 	}

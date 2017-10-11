@@ -1,16 +1,20 @@
 package selector
 
 import (
-	"fmt"
 	"strings"
 )
 
-var (
-	// ErrInvalidOperator is returned if the operator is invalid.
-	ErrInvalidOperator = fmt.Errorf("invalid operator")
-
-	// ErrInvalidSelector is returned if there is a structural issue with the selector.
-	ErrInvalidSelector = fmt.Errorf("invalid selector")
+const (
+	// OpEquals is an operator.
+	OpEquals = "="
+	// OpDoubleEquals is an operator.
+	OpDoubleEquals = "=="
+	// OpNotEquals is an operator.
+	OpNotEquals = "!="
+	// OpIn is an operator.
+	OpIn = "in"
+	// OpNotIn is an operator.
+	OpNotIn = "notin"
 )
 
 // Lexer is the working engine of the semantic extraction for a selector.
@@ -28,7 +32,7 @@ type Lexer struct {
 func (l *Lexer) Lex() (Selector, error) {
 	l.s = strings.TrimSpace(l.s)
 	if len(l.s) == 0 {
-		return nil, fmt.Errorf("query is empty")
+		return nil, ErrEmptySelector
 	}
 
 	var b byte
@@ -41,7 +45,7 @@ func (l *Lexer) Lex() (Selector, error) {
 
 		// sniff the !haskey form
 		b = l.current()
-		if b == '!' {
+		if b == Bang {
 			l.advance() // we aren't going to use the '!'
 			selector = l.lift(selector, l.notHasKey(l.readWord()))
 			if l.done() {
@@ -55,7 +59,7 @@ func (l *Lexer) Lex() (Selector, error) {
 
 		l.mark()
 		b = l.skipToComma()
-		if b == ',' || l.isTerminator(b) || l.done() {
+		if b == Comma || l.isTerminator(b) || l.done() {
 			selector = l.lift(selector, l.hasKey(key))
 			l.advance()
 			if l.done() {
@@ -72,20 +76,20 @@ func (l *Lexer) Lex() (Selector, error) {
 		}
 
 		switch op {
-		case "=", "==":
+		case OpEquals, OpDoubleEquals:
 			selector = l.lift(selector, l.equals(key))
-		case "!=":
+		case OpNotEquals:
 			selector = l.lift(selector, l.notEquals(key))
-		case "in":
+		case OpIn:
 			selector = l.lift(selector, l.in(key))
-		case "notin":
+		case OpNotIn:
 			selector = l.lift(selector, l.notIn(key))
 		default:
 			return nil, ErrInvalidOperator
 		}
 
 		b = l.skipToComma()
-		if b == ',' {
+		if b == Comma {
 			l.advance()
 			if l.done() {
 				break
@@ -209,11 +213,11 @@ func (l *Lexer) readOp() (string, error) {
 
 		switch state {
 		case 0: // initial state, determine what op we're reading for
-			if ch == '=' {
+			if ch == Equal {
 				state = 1
 				break
 			}
-			if ch == '!' {
+			if ch == Bang {
 				state = 2
 				break
 			}
@@ -230,14 +234,14 @@ func (l *Lexer) readOp() (string, error) {
 			if l.isWhitespace(ch) || l.isAlpha(ch) {
 				return string(op), nil
 			}
-			if ch == '=' {
+			if ch == Equal {
 				op = append(op, ch)
 				l.advance()
 				return string(op), nil
 			}
 			return "", ErrInvalidOperator
 		case 2: // !
-			if ch == '=' {
+			if ch == Equal {
 				op = append(op, ch)
 				l.advance()
 				return string(op), nil
@@ -320,7 +324,7 @@ func (l *Lexer) readCSV() (results []string) {
 	var ch byte
 	for {
 		ch = l.current()
-		if ch == ')' {
+		if ch == CloseParens {
 			if len(word) > 0 {
 				results = append(results, string(word))
 			}
@@ -328,12 +332,12 @@ func (l *Lexer) readCSV() (results []string) {
 			return
 		}
 
-		if ch == '(' || l.isWhitespace(ch) {
+		if ch == OpenParens || l.isWhitespace(ch) {
 			l.advance()
 			continue
 		}
 
-		if ch == ',' {
+		if ch == Comma {
 			results = append(results, string(word))
 			word = []byte{}
 			l.advance()
@@ -374,7 +378,7 @@ func (l *Lexer) skipToComma() (ch byte) {
 	}
 	for {
 		ch = l.current()
-		if ch == ',' {
+		if ch == Comma {
 			return
 		}
 		if !l.isWhitespace(ch) {
@@ -389,13 +393,13 @@ func (l *Lexer) skipToComma() (ch byte) {
 
 // isWhitespace returns true if the rune is a space, tab, or newline.
 func (l *Lexer) isWhitespace(ch byte) bool {
-	return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n'
+	return ch == Space || ch == Tab || ch == CarriageReturn || ch == NewLine
 }
 
-// isSpecialSymbol detect if the character ch can be an operator
+// isSpecialSymbol returns if the ch can be a token.
 func (l *Lexer) isSpecialSymbol(ch byte) bool {
 	switch ch {
-	case '=', '!', '(', ')', ',', '>', '<':
+	case Equal, Bang, OpenParens, CloseParens, Comma:
 		return true
 	}
 	return false
@@ -408,5 +412,5 @@ func (l *Lexer) isTerminator(ch byte) bool {
 
 // this needs a test la.
 func (l *Lexer) isAlpha(ch byte) bool {
-	return int(ch) >= int('A') && int(ch) <= int('z')
+	return isLetter(ch)
 }

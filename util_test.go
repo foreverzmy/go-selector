@@ -6,17 +6,17 @@ import (
 	assert "github.com/blendlabs/go-assert"
 )
 
-func TestCheckLabel(t *testing.T) {
+func TestCheckKey(t *testing.T) {
 	assert := assert.New(t)
 
-	assert.Nil(CheckLabel("foo"))
-	assert.Nil(CheckLabel("bar/foo"))
-	assert.Nil(CheckLabel("bar.io/foo"))
-	assert.NotNil(CheckLabel("_foo"))
-	assert.NotNil(CheckLabel("-foo"))
-	assert.NotNil(CheckLabel("foo-"))
-	assert.NotNil(CheckLabel("foo_"))
-	assert.NotNil(CheckLabel("bar/foo/baz"))
+	assert.Nil(CheckKey("foo"))
+	assert.Nil(CheckKey("bar/foo"))
+	assert.Nil(CheckKey("bar.io/foo"))
+	assert.NotNil(CheckKey("_foo"))
+	assert.NotNil(CheckKey("-foo"))
+	assert.NotNil(CheckKey("foo-"))
+	assert.NotNil(CheckKey("foo_"))
+	assert.NotNil(CheckKey("bar/foo/baz"))
 }
 
 func TestCheckValue(t *testing.T) {

@@ -13,7 +13,7 @@ func (hk HasKey) Matches(labels Labels) bool {
 
 // Validate validates the selector.
 func (hk HasKey) Validate() (err error) {
-	err = CheckLabel(string(hk))
+	err = CheckKey(string(hk))
 	return
 }
 

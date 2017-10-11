@@ -25,7 +25,7 @@ func (ni NotIn) Matches(labels Labels) bool {
 
 // Validate validates the selector.
 func (ni NotIn) Validate() (err error) {
-	err = CheckLabel(ni.Key)
+	err = CheckKey(ni.Key)
 	if err != nil {
 		return
 	}

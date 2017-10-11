@@ -17,7 +17,7 @@ func (e Equals) Matches(labels Labels) bool {
 
 // Validate validates the selector.
 func (e Equals) Validate() (err error) {
-	err = CheckLabel(e.Key)
+	err = CheckKey(e.Key)
 	if err != nil {
 		return
 	}
