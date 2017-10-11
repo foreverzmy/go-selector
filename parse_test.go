@@ -88,8 +88,14 @@ func TestParseGroup(t *testing.T) {
 		"moo":   "something",
 		"thing": "map",
 	}
+	invalid2 := Labels{
+		"zoo":    "mar",
+		"moo":    "lar",
+		"!thing": "map",
+	}
 	selector, err := Parse("zoo=mar, moo=lar, thing")
 	assert.Nil(err)
 	assert.True(selector.Matches(valid))
 	assert.False(selector.Matches(invalid))
+	assert.False(selector.Matches(invalid2))
 }
