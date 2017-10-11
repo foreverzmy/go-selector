@@ -174,11 +174,11 @@ func checkDNS(value string) (err error) {
 			state = 1
 			continue
 		case 1:
-			if ch == Dot {
+			if ch == Dot || ch == Dash || ch == Underscore {
 				state = 2
 				continue
 			}
-			if !(ch == Dash || ch == Underscore || isLetter(ch) || isDigit(ch)) {
+			if !(isLetter(ch) || isDigit(ch)) {
 				err = ErrKeyInvalidCharacter
 				return
 			}
@@ -186,7 +186,7 @@ func checkDNS(value string) (err error) {
 				state = 0
 			}
 			continue
-		case 2: // we've hit a dot
+		case 2: // we've hit a dot, dash, or underscore that can't repeat
 			if !(isLetter(ch) || isDigit(ch)) {
 				err = ErrKeyInvalidCharacter
 				return
