@@ -17,3 +17,21 @@ Selector is a library that matches as closely as possible the intent and semanti
   <values>                  ::= VALUE | VALUE "," <values>
   <exact-match-restriction> ::= ["="|"=="|"!="] VALUE
 ```
+
+## Example
+
+Given a label collection:
+```golang
+valid := Labels{
+  "zoo":   "mar",
+  "moo":   "lar",
+  "thing": "map",
+}
+```
+
+We can then compile a selector:
+
+```golang
+selector, _ := Parse("zoo in (mar,lar,dar),moo,thing == map,!thingy")
+fmt.Println(complicated.Matches(valid)) //prints `true`
+```
