@@ -13,8 +13,8 @@ var (
 	ErrInvalidSelector = fmt.Errorf("invalid selector")
 )
 
-// Lexer represents the Lexer struct for label selector.
-// It contains necessary informationt to tokenize the input string
+// Lexer is the working engine of the semantic extraction for a selector.
+// It lets us work through a string with a cursor, with an optional mark we can refer back  to.
 type Lexer struct {
 	// s stores the string to be tokenized
 	s string
@@ -24,8 +24,7 @@ type Lexer struct {
 	m int
 }
 
-// Lex returns a pair of Token and the literal
-// literal is meaningfull only for IdentifierToken token
+// Lex does the actual parsing.
 func (l *Lexer) Lex() (Selector, error) {
 	l.s = strings.TrimSpace(l.s)
 	if len(l.s) == 0 {
