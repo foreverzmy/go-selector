@@ -118,6 +118,13 @@ func TestParseGroupComplicated(t *testing.T) {
 	assert.True(complicated.Matches(valid))
 }
 
+func TestParseDocsExample(t *testing.T) {
+	assert := assert.New(t)
+	selector, err := Parse("x in (foo,,baz),y,z notin ()")
+	assert.Nil(err)
+	assert.NotNil(selector)
+}
+
 func TestParseValidate(t *testing.T) {
 	assert := assert.New(t)
 

@@ -55,7 +55,7 @@ func (l *Lexer) Lex() (Selector, error) {
 
 		l.mark()
 		b = l.skipToComma()
-		if b == byte(',') || l.isTerminator(b) || l.done() {
+		if b == ',' || l.isTerminator(b) || l.done() {
 			selector = l.lift(selector, l.hasKey(key))
 			l.advance()
 			if l.done() {
@@ -85,7 +85,7 @@ func (l *Lexer) Lex() (Selector, error) {
 		}
 
 		b = l.skipToComma()
-		if b == byte(',') {
+		if b == ',' {
 			l.advance()
 			if l.done() {
 				break
@@ -209,19 +209,19 @@ func (l *Lexer) readOp() (string, error) {
 
 		switch state {
 		case 0: // initial state, determine what op we're reading for
-			if ch == byte('=') {
+			if ch == '=' {
 				state = 1
 				break
 			}
-			if ch == byte('!') {
+			if ch == '!' {
 				state = 2
 				break
 			}
-			if ch == byte('i') {
+			if ch == 'i' {
 				state = 6
 				break
 			}
-			if ch == byte('n') {
+			if ch == 'n' {
 				state = 7
 				break
 			}
@@ -230,46 +230,46 @@ func (l *Lexer) readOp() (string, error) {
 			if l.isWhitespace(ch) || l.isAlpha(ch) {
 				return string(op), nil
 			}
-			if ch == byte('=') {
+			if ch == '=' {
 				op = append(op, ch)
 				l.advance()
 				return string(op), nil
 			}
 			return "", ErrInvalidOperator
 		case 2: // !
-			if ch == byte('=') {
+			if ch == '=' {
 				op = append(op, ch)
 				l.advance()
 				return string(op), nil
 			}
 			return "", ErrInvalidOperator
 		case 6: // in
-			if ch == byte('n') {
+			if ch == 'n' {
 				op = append(op, ch)
 				l.advance()
 				return string(op), nil
 			}
 			return "", ErrInvalidOperator
 		case 7: // o
-			if ch == byte('o') {
+			if ch == 'o' {
 				state = 8
 				break
 			}
 			return "", ErrInvalidOperator
 		case 8: // t
-			if ch == byte('t') {
+			if ch == 't' {
 				state = 9
 				break
 			}
 			return "", ErrInvalidOperator
 		case 9: // i
-			if ch == byte('i') {
+			if ch == 'i' {
 				state = 10
 				break
 			}
 			return "", ErrInvalidOperator
 		case 10: // n
-			if ch == byte('n') {
+			if ch == 'n' {
 				op = append(op, ch)
 				l.advance()
 				return string(op), nil
@@ -320,7 +320,7 @@ func (l *Lexer) readCSV() (results []string) {
 	var ch byte
 	for {
 		ch = l.current()
-		if ch == byte(')') {
+		if ch == ')' {
 			if len(word) > 0 {
 				results = append(results, string(word))
 			}
@@ -328,12 +328,12 @@ func (l *Lexer) readCSV() (results []string) {
 			return
 		}
 
-		if ch == byte('(') || l.isWhitespace(ch) {
+		if ch == '(' || l.isWhitespace(ch) {
 			l.advance()
 			continue
 		}
 
-		if ch == byte(',') {
+		if ch == ',' {
 			results = append(results, string(word))
 			word = []byte{}
 			l.advance()
@@ -374,7 +374,7 @@ func (l *Lexer) skipToComma() (ch byte) {
 	}
 	for {
 		ch = l.current()
-		if ch == byte(',') {
+		if ch == ',' {
 			return
 		}
 		if !l.isWhitespace(ch) {

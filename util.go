@@ -11,8 +11,10 @@ const (
 	RuneDash = rune('-')
 	// RuneUnderscore  is a common rune.
 	RuneUnderscore = rune('_')
-	// RuneDot         is a common rune.
+	// RuneDot is a common rune.
 	RuneDot = rune('.')
+	// RuneBackslash is a common rune.
+	RuneBackslash = rune('\\')
 )
 
 // CheckLabel validates a label
@@ -35,9 +37,6 @@ func CheckLabel(label string) error {
 
 // CheckValue returns if the value is valid.
 func CheckValue(value string) error {
-	if len(value) == 0 {
-		return fmt.Errorf("value is empty")
-	}
 	if len(value) > 63 {
 		return fmt.Errorf("value is too long")
 	}
@@ -80,6 +79,7 @@ func checkName(value string) error {
 			if !(c == RuneDash ||
 				c == RuneUnderscore ||
 				c == RuneDot ||
+				c == RuneBackslash ||
 				unicode.IsLetter(c) ||
 				unicode.IsDigit(c)) {
 
