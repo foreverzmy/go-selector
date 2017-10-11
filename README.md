@@ -33,5 +33,5 @@ We can then compile a selector:
 
 ```golang
 selector, _ := Parse("zoo in (mar,lar,dar),moo,thing == map,!thingy")
-fmt.Println(complicated.Matches(valid)) //prints `true`
+fmt.Println(selector.Matches(valid)) //prints `true`
 ```
