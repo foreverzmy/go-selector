@@ -99,3 +99,19 @@ func TestParseGroup(t *testing.T) {
 	assert.False(selector.Matches(invalid))
 	assert.False(selector.Matches(invalid2))
 }
+
+func TestParseValidate(t *testing.T) {
+	assert := assert.New(t)
+
+	_, err := Parse("zoo=bar")
+	assert.Nil(err)
+
+	_, err = Parse("_zoo=bar")
+	assert.NotNil(err)
+
+	_, err = Parse("_zoo=_bar")
+	assert.NotNil(err)
+
+	_, err = Parse("zoo=bar,foo=_mar")
+	assert.NotNil(err)
+}
