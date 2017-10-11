@@ -22,6 +22,7 @@ func TestCheckKey(t *testing.T) {
 
 	assert.NotNil(CheckKey(""), "should error on empty keys")
 
+	assert.NotNil(CheckKey("/foo"), "should error on empty dns prefixes")
 	superLongDNSPrefixed := fmt.Sprintf("%s/%s", strings.Repeat("a", MaxDNSPrefixLen), strings.Repeat("a", MaxKeyLen))
 	assert.Nil(CheckKey(superLongDNSPrefixed), len(superLongDNSPrefixed))
 	superLongDNSPrefixed = fmt.Sprintf("%s/%s", strings.Repeat("a", MaxDNSPrefixLen+1), strings.Repeat("a", MaxKeyLen))
