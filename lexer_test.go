@@ -265,3 +265,10 @@ func TestLexerIn(t *testing.T) {
 	assert.Equal("bar", typed.Values[0])
 	assert.Equal("baz", typed.Values[1])
 }
+
+func TestLexerLex(t *testing.T) {
+	assert := assert.New(t)
+	l := &Lexer{s: ""}
+	_, err := l.Lex()
+	assert.NotNil(err)
+}

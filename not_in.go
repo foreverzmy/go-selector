@@ -16,10 +16,12 @@ func (ni NotIn) Matches(labels Labels) bool {
 	if value, hasValue := labels[ni.Key]; hasValue {
 		for _, iv := range ni.Values {
 			if iv == value {
+				// the key does not equal any of the values
 				return false
 			}
 		}
 	}
+	// the value doesn't exist.
 	return true
 }
 
