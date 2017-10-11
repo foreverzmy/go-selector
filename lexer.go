@@ -20,6 +20,8 @@ type Lexer struct {
 	s string
 	// pos is the position currently tokenized
 	pos int
+	// m is an optional mark
+	m int
 }
 
 // Lex returns a pair of Token and the literal
@@ -43,15 +45,26 @@ func (l *Lexer) Lex() (Selector, error) {
 		if b == '!' {
 			l.advance() // we aren't going to use the '!'
 			selector = l.lift(selector, l.notHasKey(l.readWord()))
-			break
+			if l.done() {
+				break
+			}
+			continue
 		}
 
 		// we're done peeking the first char
 		key := l.readWord()
 
-		if l.done() {
+		l.mark()
+		b = l.skipToComma()
+		if b == byte(',') || l.isTerminator(b) || l.done() {
 			selector = l.lift(selector, l.hasKey(key))
-			break
+			l.advance()
+			if l.done() {
+				break
+			}
+			continue
+		} else {
+			l.popMark()
 		}
 
 		op, err = l.readOp()
@@ -137,6 +150,19 @@ func (l *Lexer) notIn(key string) Selector {
 // done indicates the cursor is past the usable length of the string.
 func (l *Lexer) done() bool {
 	return l.pos == len(l.s)
+}
+
+// mark sets a mark
+func (l *Lexer) mark() {
+	l.m = l.pos
+}
+
+// popMark moves the cursor back to the previous mark
+func (l *Lexer) popMark() {
+	if l.m > 0 {
+		l.pos = l.m
+	}
+	l.m = 0
 }
 
 // read return the character currently lexed

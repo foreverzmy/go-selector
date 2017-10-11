@@ -98,6 +98,24 @@ func TestParseGroup(t *testing.T) {
 	assert.True(selector.Matches(valid))
 	assert.False(selector.Matches(invalid))
 	assert.False(selector.Matches(invalid2))
+
+	complicated, err := Parse("zoo in (mar,lar,dar),moo,!thingy")
+	assert.Nil(err)
+	assert.NotNil(complicated)
+	assert.True(complicated.Matches(valid))
+}
+
+func TestParseGroupComplicated(t *testing.T) {
+	assert := assert.New(t)
+	valid := Labels{
+		"zoo":   "mar",
+		"moo":   "lar",
+		"thing": "map",
+	}
+	complicated, err := Parse("zoo in (mar,lar,dar),moo,!thingy")
+	assert.Nil(err)
+	assert.NotNil(complicated)
+	assert.True(complicated.Matches(valid))
 }
 
 func TestParseValidate(t *testing.T) {
@@ -114,4 +132,22 @@ func TestParseValidate(t *testing.T) {
 
 	_, err = Parse("zoo=bar,foo=_mar")
 	assert.NotNil(err)
+}
+
+func BenchmarkParse(b *testing.B) {
+	valid := Labels{
+		"zoo":   "mar",
+		"moo":   "lar",
+		"thing": "map",
+	}
+
+	for i := 0; i < b.N; i++ {
+		selector, err := Parse("zoo in (mar,lar,dar),moo,!thingy")
+		if err != nil {
+			b.Fail()
+		}
+		if !selector.Matches(valid) {
+			b.Fail()
+		}
+	}
 }
