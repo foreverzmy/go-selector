@@ -14,4 +14,5 @@ func TestHasKey(t *testing.T) {
 	}
 	assert.True(HasKey("foo").Matches(valid))
 	assert.False(HasKey("zoo").Matches(valid))
+	assert.Equal("foo", HasKey("foo").String())
 }

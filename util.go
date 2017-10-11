@@ -46,6 +46,9 @@ var (
 	// ErrInvalidSelector is returned if there is a structural issue with the selector.
 	ErrInvalidSelector = fmt.Errorf("invalid selector")
 
+	// ErrKeyEmpty indicates a key is empty.
+	ErrKeyEmpty = fmt.Errorf("key empty")
+
 	// ErrKeyTooLong indicates a key is too long.
 	ErrKeyTooLong = fmt.Errorf("key too long")
 
@@ -75,8 +78,13 @@ var (
 // CheckKey validates a key.
 func CheckKey(key string) (err error) {
 	keyLen := len(key)
+	if keyLen == 0 {
+		err = ErrKeyEmpty
+		return
+	}
 	if keyLen > MaxKeyTotalLen {
-		return ErrKeyTooLong
+		err = ErrKeyTooLong
+		return
 	}
 
 	var working []byte

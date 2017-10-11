@@ -14,4 +14,5 @@ func TestNotHasKey(t *testing.T) {
 	}
 	assert.False(NotHasKey("foo").Matches(valid))
 	assert.True(NotHasKey("zoo").Matches(valid))
+	assert.Equal("!foo", NotHasKey("foo").String())
 }

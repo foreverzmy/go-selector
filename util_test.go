@@ -1,6 +1,8 @@
 package selector
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
 	assert "github.com/blendlabs/go-assert"
@@ -17,6 +19,17 @@ func TestCheckKey(t *testing.T) {
 	assert.NotNil(CheckKey("foo-"))
 	assert.NotNil(CheckKey("foo_"))
 	assert.NotNil(CheckKey("bar/foo/baz"))
+
+	assert.NotNil(CheckKey(""))
+
+	superLongDNSPrefixed := fmt.Sprintf("%s/%s", strings.Repeat("a", MaxDNSPrefixLen), strings.Repeat("a", MaxKeyLen))
+	assert.Nil(CheckKey(superLongDNSPrefixed), len(superLongDNSPrefixed))
+	superLongDNSPrefixed = fmt.Sprintf("%s/%s", strings.Repeat("a", MaxDNSPrefixLen+1), strings.Repeat("a", MaxKeyLen))
+	assert.NotNil(CheckKey(superLongDNSPrefixed), len(superLongDNSPrefixed))
+	superLongDNSPrefixed = fmt.Sprintf("%s/%s", strings.Repeat("a", MaxDNSPrefixLen+1), strings.Repeat("a", MaxKeyLen+1))
+	assert.NotNil(CheckKey(superLongDNSPrefixed), len(superLongDNSPrefixed))
+	superLongDNSPrefixed = fmt.Sprintf("%s/%s", strings.Repeat("a", MaxDNSPrefixLen), strings.Repeat("a", MaxKeyLen+1))
+	assert.NotNil(CheckKey(superLongDNSPrefixed), len(superLongDNSPrefixed))
 }
 
 func TestCheckValue(t *testing.T) {

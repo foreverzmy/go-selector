@@ -26,4 +26,5 @@ func TestNotIn(t *testing.T) {
 	assert.True(selector.Matches(valid))
 	assert.True(selector.Matches(missing))
 	assert.False(selector.Matches(invalid))
+	assert.Equal("foo notin (bar, far)", selector.String())
 }

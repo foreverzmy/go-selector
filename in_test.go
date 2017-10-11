@@ -31,4 +31,6 @@ func TestIn(t *testing.T) {
 	assert.True(selector.Matches(valid2))
 	assert.True(selector.Matches(missing))
 	assert.False(selector.Matches(invalid))
+
+	assert.Equal("foo in (bar, far)", selector.String())
 }
