@@ -86,7 +86,6 @@ func (l *Lexer) Lex() (Selector, error) {
 			break
 		}
 
-		println("bad selector; not finished, not comma")
 		return nil, ErrInvalidSelector
 	}
 
