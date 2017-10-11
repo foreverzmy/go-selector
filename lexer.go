@@ -89,6 +89,11 @@ func (l *Lexer) Lex() (Selector, error) {
 		return nil, ErrInvalidSelector
 	}
 
+	err = selector.Validate()
+	if err != nil {
+		return nil, err
+	}
+
 	return selector, nil
 }
 

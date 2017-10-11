@@ -15,6 +15,16 @@ func (ne NotEquals) Matches(labels Labels) bool {
 	return true
 }
 
+// Validate validates the selector.
+func (ne NotEquals) Validate() (err error) {
+	err = CheckLabel(ne.Key)
+	if err != nil {
+		return
+	}
+	err = CheckValue(ne.Value)
+	return
+}
+
 // String returns a string representation of the selector.
 func (ne NotEquals) String() string {
 	return fmt.Sprintf("%s != %s", ne.Key, ne.Value)

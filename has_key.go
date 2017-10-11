@@ -11,6 +11,12 @@ func (hk HasKey) Matches(labels Labels) bool {
 	return false
 }
 
+// Validate validates the selector.
+func (hk HasKey) Validate() (err error) {
+	err = CheckLabel(string(hk))
+	return
+}
+
 // String returns a string representation of the selector.
 func (hk HasKey) String() string {
 	return string(hk)
