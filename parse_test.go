@@ -112,7 +112,7 @@ func TestParseGroupComplicated(t *testing.T) {
 		"moo":   "lar",
 		"thing": "map",
 	}
-	complicated, err := Parse("zoo in (mar,lar,dar),moo,!thingy")
+	complicated, err := Parse("zoo in (mar,lar,dar),moo,thing == map,!thingy")
 	assert.Nil(err)
 	assert.NotNil(complicated)
 	assert.True(complicated.Matches(valid))
