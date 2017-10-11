@@ -7,13 +7,9 @@ sudo: false
 notifications:
   slack:
     rooms:
-      secure: "Ku7zwX0wHlkf9je++nk5lNrEx2cmEs1EKrTly729nl9pzpJi3FpLrYMCpBETfnQkvolsFAPuYd+j3y3OZjsc66evMeFzjjb06gqO4Yw57/co40hBQ3ABm8SuK8IDbV6Q1IoW8MHHuv5WRf49AEjLZk7sw/2TpfEOAdXOlQVNiUsueBg/8KMgGIrX4RjmaqmHDA2oD+XJjAojqGuhaRpBrnzBHt23KxL+T7LWYkIycj86HtX4TKuFkr5XxK586TqDwhESy3o55L6+ME3G0IFwA3xidmyp0OcyUxmyuOXCfJBqf+q9Rdk3xe+R8o8CEhNyksbTOONJmNh4XMvJHVYyEKlVi7/e3icIuSF3OKDvszaX2RVqvVTVjfLjOrz9oWUIKc+QNt+xrtTLWVMIGjedY46WM0YfrYZuk57ttHYCJH0e1nCkNc7zTPo6dDskscCEbhJnAK1WC6hrmgviPeBFEwrEDYx4/Oqo+/anReYC3XzFvTUu4Pz1gdX4vfAVXYKz6WiUJX9VRRwPj5q/V3mYaNa6xQqnIWSFcf3kXvONP/8Wk9V1v7884sfBa9063qQJYojBIt9relSpaRgsmyxp4b5KFRfRFRhLXILYAOaU5eq4rZ0sj5v9EpjyZ7a2qFl2pR/70oQNoNnrrb7ntg/9KFJBz/gkE7noMSiRL7end/s="
+      - secure: "Ku7zwX0wHlkf9je++nk5lNrEx2cmEs1EKrTly729nl9pzpJi3FpLrYMCpBETfnQkvolsFAPuYd+j3y3OZjsc66evMeFzjjb06gqO4Yw57/co40hBQ3ABm8SuK8IDbV6Q1IoW8MHHuv5WRf49AEjLZk7sw/2TpfEOAdXOlQVNiUsueBg/8KMgGIrX4RjmaqmHDA2oD+XJjAojqGuhaRpBrnzBHt23KxL+T7LWYkIycj86HtX4TKuFkr5XxK586TqDwhESy3o55L6+ME3G0IFwA3xidmyp0OcyUxmyuOXCfJBqf+q9Rdk3xe+R8o8CEhNyksbTOONJmNh4XMvJHVYyEKlVi7/e3icIuSF3OKDvszaX2RVqvVTVjfLjOrz9oWUIKc+QNt+xrtTLWVMIGjedY46WM0YfrYZuk57ttHYCJH0e1nCkNc7zTPo6dDskscCEbhJnAK1WC6hrmgviPeBFEwrEDYx4/Oqo+/anReYC3XzFvTUu4Pz1gdX4vfAVXYKz6WiUJX9VRRwPj5q/V3mYaNa6xQqnIWSFcf3kXvONP/8Wk9V1v7884sfBa9063qQJYojBIt9relSpaRgsmyxp4b5KFRfRFRhLXILYAOaU5eq4rZ0sj5v9EpjyZ7a2qFl2pR/70oQNoNnrrb7ntg/9KFJBz/gkE7noMSiRL7end/s="
     on_success: always
     on_failure: always
-    template:
-      - "%{repository_slug} %{message} %{duration}"
-      - "%{author} : (<%{compare_url}|%{commit}>) %{commit_message}"
-      - "Build Details: %{build_url}"
 
 before_script:
   - go get -u github.com/blendlabs/go-assert
