@@ -1,8 +1,7 @@
 package selector
 
 // Parse takes a string representing a selector and returns a selector
-// object, or an error. This parsing function differs from ParseSelector
-// as they parse different selectors with different syntaxes.
+// object, or an error.
 // The input will cause an error if it does not follow this form:
 //
 //  <selector-syntax>         ::= <requirement> | <requirement> "," <selector-syntax>
