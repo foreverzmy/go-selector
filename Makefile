@@ -1,5 +1,8 @@
 all: test vet cover
 
+spell:
+	@misspell -locale US *.go *.md
+
 vet:
 	@go vet
 
@@ -13,3 +16,6 @@ cover-report:
 	@go test -coverprofile=coverage.out
 	@go tool cover -html=coverage.out
 	@rm coverage.out
+
+tools:
+	go get -u github.com/client9/misspell

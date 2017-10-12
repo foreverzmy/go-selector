@@ -206,7 +206,7 @@ func (l *Lexer) prev() {
 // [ =, ==, !=, in, notin ]
 // errors if it doesn't read one of the above.
 func (l *Lexer) readOp() (string, error) {
-	// skip preceeding whitespace
+	// skip preceding whitespace
 	l.skipWhiteSpace()
 
 	var state int
@@ -297,7 +297,7 @@ func (l *Lexer) readOp() (string, error) {
 // readWord skips whitespace, then reads a word until whitespace or a token.
 // it will leave the cursor on the next char after the word, i.e. the space or token.
 func (l *Lexer) readWord() string {
-	// skip preceeding whitespace
+	// skip preceding whitespace
 	l.skipWhiteSpace()
 
 	var word []rune
@@ -321,7 +321,7 @@ func (l *Lexer) readWord() string {
 }
 
 func (l *Lexer) readCSV() (results []string) {
-	// skip preceeding whitespace
+	// skip preceding whitespace
 	l.skipWhiteSpace()
 
 	var word []rune
