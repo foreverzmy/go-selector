@@ -4,6 +4,11 @@ go:
 
 sudo: false
 
+cache:
+  directories:
+    - $GOPATH/src
+    - $GOPATH/pkg
+
 notifications:
   slack:
     rooms:
@@ -15,11 +20,11 @@ notifications:
       - "%{author} : (<%{compare_url}|%{commit}>) %{commit_message}"
       - "Build Details: %{build_url}"
 
-before_script:
+install:
   - go get -u github.com/blendlabs/go-assert
   - go get -u github.com/client9/misspell
 
 script:
   - go vet
-  - $GOPATH/bin/misspell -locale US *.go *.md
+  - misspell -locale US *.go *.md
   - go test
