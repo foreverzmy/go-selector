@@ -9,14 +9,40 @@ import (
 func TestParseInvalid(t *testing.T) {
 	assert := assert.New(t)
 
-	_, err := Parse("x==a==b")
-	assert.NotNil(err)
+	testBadStrings := []string{
+		"",
+		"x=a||y=b",
+		"x==a==b",
+		"!x=a",
+		"x<a",
+		"x>1",
+		"x>1,z<5",
+	}
+	var err error
+	for _, str := range testBadStrings {
+		_, err = Parse(str)
+		assert.NotNil(err, str)
+	}
+}
 
-	_, err = Parse("!x==b")
-	assert.NotNil(err)
+func TestParseSemiValid(t *testing.T) {
+	assert := assert.New(t)
 
-	_, err = Parse("x<b")
-	assert.NotNil(err)
+	testGoodStrings := []string{
+		"x=a,y=b,z=c",
+		"x!=a,y=b",
+		"x=",
+		"x= ",
+		"x=,z= ",
+		"x= ,z= ",
+		"!x",
+	}
+
+	var err error
+	for _, str := range testGoodStrings {
+		_, err = Parse(str)
+		assert.Nil(err, str)
+	}
 }
 
 func TestParseEquals(t *testing.T) {
@@ -136,6 +162,18 @@ func TestParseDocsExample(t *testing.T) {
 	selector, err := Parse("x in (foo,,baz),y,z notin ()")
 	assert.Nil(err)
 	assert.NotNil(selector)
+}
+
+func TestParseEqualsOperators(t *testing.T) {
+	assert := assert.New(t)
+
+	selector, err := Parse("notin=in")
+	assert.Nil(err)
+
+	typed, isTyped := selector.(Equals)
+	assert.True(isTyped)
+	assert.Equal("notin", typed.Key)
+	assert.Equal("in", typed.Value)
 }
 
 func TestParseValidate(t *testing.T) {

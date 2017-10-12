@@ -235,7 +235,7 @@ func (l *Lexer) readOp() (string, error) {
 			}
 			return "", ErrInvalidOperator
 		case 1: // =
-			if l.isWhitespace(ch) || l.isAlpha(ch) {
+			if l.isWhitespace(ch) || l.isAlpha(ch) || ch == Comma {
 				return string(op), nil
 			}
 			if ch == Equal {
