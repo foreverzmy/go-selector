@@ -3,8 +3,6 @@ package selector
 import (
 	"strings"
 	"unicode/utf8"
-
-	exception "github.com/blendlabs/go-exception"
 )
 
 const (
@@ -35,7 +33,7 @@ type Lexer struct {
 func (l *Lexer) Lex() (Selector, error) {
 	l.s = strings.TrimSpace(l.s)
 	if len(l.s) == 0 {
-		return nil, exception.NewFromErr(ErrEmptySelector)
+		return nil, ErrEmptySelector
 	}
 
 	var b rune
@@ -110,7 +108,7 @@ func (l *Lexer) Lex() (Selector, error) {
 
 	err = selector.Validate()
 	if err != nil {
-		return nil, exception.Wrap(err)
+		return nil, err
 	}
 
 	return selector, nil
