@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	assert "github.com/blendlabs/go-assert"
+	validation "k8s.io/apimachinery/pkg/util/validation"
 )
 
 func TestCheckKey(t *testing.T) {
@@ -31,6 +32,46 @@ func TestCheckKey(t *testing.T) {
 	assert.NotNil(CheckKey(superLongDNSPrefixed), len(superLongDNSPrefixed))
 	superLongDNSPrefixed = fmt.Sprintf("%s/%s", strings.Repeat("a", MaxDNSPrefixLen), strings.Repeat("a", MaxKeyLen+1))
 	assert.NotNil(CheckKey(superLongDNSPrefixed), len(superLongDNSPrefixed))
+}
+
+func TestCheckKeyK8S(t *testing.T) {
+	assert := assert.New(t)
+
+	values := []string{
+		// the "good" cases
+		"simple",
+		"now-with-dashes",
+		"1-starts-with-num",
+		"1234",
+		"simple/simple",
+		"now-with-dashes/simple",
+		"now-with-dashes/now-with-dashes",
+		"now.with.dots/simple",
+		"now-with.dashes-and.dots/simple",
+		"1-num.2-num/3-num",
+		"1234/5678",
+		"1.2.3.4/5678",
+		"Uppercase_Is_OK_123",
+		"example.com/Uppercase_Is_OK_123",
+		"requests.storage-foo",
+		strings.Repeat("a", 63),
+		strings.Repeat("a", 253) + "/" + strings.Repeat("b", 63),
+
+		// the "bad" cases
+		"nospecialchars%^=@",
+		"cantendwithadash-",
+		"-cantstartwithadash-",
+		"only/one/slash",
+		"Example.com/abc",
+		"example_com/abc",
+		"example.com/",
+		"/simple",
+		strings.Repeat("a", 64),
+		strings.Repeat("a", 254) + "/abc",
+	}
+	for _, val := range values {
+		assert.True((len(validation.IsQualifiedName(val)) == 0) == (CheckKey(val) == nil), val, validation.IsQualifiedName(val), CheckKey(val))
+	}
 }
 
 func TestCheckValue(t *testing.T) {

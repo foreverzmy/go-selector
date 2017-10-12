@@ -124,6 +124,9 @@ func CheckKey(key string) (err error) {
 		continue
 	}
 
+	if len(working) == 0 {
+		return ErrKeyEmpty
+	}
 	if len(working) > MaxKeyLen {
 		return ErrKeyTooLong
 	}
@@ -185,17 +188,21 @@ func checkDNS(value string) (err error) {
 		ch, width = utf8.DecodeRuneInString(value[pos:])
 		switch state {
 		case 0: //check prefix | suffix
-			if !isAlpha(ch) {
+			if !isLowerAlpha(ch) {
 				return ErrKeyInvalidCharacter
 			}
 			state = 1
 			continue
 		case 1:
+			if ch == Underscore {
+				err = ErrKeyInvalidCharacter
+				return
+			}
 			if isNameSymbol(ch) {
 				state = 2
 				continue
 			}
-			if !isAlpha(ch) {
+			if !isLowerAlpha(ch) {
 				err = ErrKeyInvalidCharacter
 				return
 			}
@@ -204,7 +211,7 @@ func checkDNS(value string) (err error) {
 			}
 			continue
 		case 2: // we've hit a dot, dash, or underscore that can't repeat
-			if !isAlpha(ch) {
+			if !isLowerAlpha(ch) {
 				err = ErrKeyInvalidCharacter
 				return
 			}
@@ -243,6 +250,13 @@ func isSymbol(ch rune) bool {
 		(int(ch) >= int(Colon) && int(ch) <= int(At)) ||
 		(int(ch) >= int(OpenBracket) && int(ch) <= int(BackTick)) ||
 		(int(ch) >= int(OpenCurly) && int(ch) <= int(Tilde))
+}
+
+func isLowerAlpha(ch rune) bool {
+	if unicode.IsLetter(ch) {
+		return unicode.IsLower(ch)
+	}
+	return isAlpha(ch)
 }
 
 func isAlpha(ch rune) bool {
