@@ -1,7 +1,11 @@
 package selector
 
 import (
+	"fmt"
 	"strings"
+	"unicode/utf8"
+
+	exception "github.com/blendlabs/go-exception"
 )
 
 const (
@@ -32,10 +36,10 @@ type Lexer struct {
 func (l *Lexer) Lex() (Selector, error) {
 	l.s = strings.TrimSpace(l.s)
 	if len(l.s) == 0 {
-		return nil, ErrEmptySelector
+		return nil, exception.NewFromErr(ErrEmptySelector)
 	}
 
-	var b byte
+	var b rune
 	var selector Selector
 	var err error
 	var op string
@@ -85,7 +89,7 @@ func (l *Lexer) Lex() (Selector, error) {
 		case OpNotIn:
 			selector = l.lift(selector, l.notIn(key))
 		default:
-			return nil, ErrInvalidOperator
+			return nil, exception.NewFromErr(ErrInvalidOperator).WithMessagef(l.errContextMessage())
 		}
 
 		b = l.skipToComma()
@@ -102,12 +106,12 @@ func (l *Lexer) Lex() (Selector, error) {
 			break
 		}
 
-		return nil, ErrInvalidSelector
+		return nil, exception.NewFromErr(ErrInvalidSelector).WithMessagef(l.errContextMessage())
 	}
 
 	err = selector.Validate()
 	if err != nil {
-		return nil, err
+		return nil, exception.Wrap(err)
 	}
 
 	return selector, nil
@@ -170,23 +174,26 @@ func (l *Lexer) popMark() {
 
 // read return the character currently lexed
 // increment the position and check the buffer overflow
-func (l *Lexer) read() (b byte) {
+func (l *Lexer) read() (r rune) {
+	var width int
 	if l.pos < len(l.s) {
-		b = l.s[l.pos]
-		l.pos++
+		r, width = utf8.DecodeRuneInString(l.s[l.pos:])
+		l.pos += width
 	}
-	return b
+	return r
 }
 
 // current returns the byte a the current position.
-func (l *Lexer) current() byte {
-	return l.s[l.pos]
+func (l *Lexer) current() (r rune) {
+	r, _ = utf8.DecodeRuneInString(l.s[l.pos:])
+	return
 }
 
 // advance moves the cursor forward one character.
 func (l *Lexer) advance() {
 	if l.pos < len(l.s) {
-		l.pos++
+		_, width := utf8.DecodeRuneInString(l.s[l.pos:])
+		l.pos += width
 	}
 }
 
@@ -206,8 +213,8 @@ func (l *Lexer) readOp() (string, error) {
 	l.skipWhiteSpace()
 
 	var state int
-	var ch byte
-	var op []byte
+	var ch rune
+	var op []rune
 	for {
 		ch = l.current()
 
@@ -229,7 +236,7 @@ func (l *Lexer) readOp() (string, error) {
 				state = 7
 				break
 			}
-			return "", ErrInvalidOperator
+			return "", exception.NewFromErr(ErrInvalidOperator).WithMessagef(l.errContextMessage())
 		case 1: // =
 			if l.isWhitespace(ch) || l.isAlpha(ch) {
 				return string(op), nil
@@ -239,46 +246,46 @@ func (l *Lexer) readOp() (string, error) {
 				l.advance()
 				return string(op), nil
 			}
-			return "", ErrInvalidOperator
+			return "", exception.NewFromErr(ErrInvalidOperator).WithMessagef(l.errContextMessage())
 		case 2: // !
 			if ch == Equal {
 				op = append(op, ch)
 				l.advance()
 				return string(op), nil
 			}
-			return "", ErrInvalidOperator
+			return "", exception.NewFromErr(ErrInvalidOperator).WithMessagef(l.errContextMessage())
 		case 6: // in
 			if ch == 'n' {
 				op = append(op, ch)
 				l.advance()
 				return string(op), nil
 			}
-			return "", ErrInvalidOperator
+			return "", exception.NewFromErr(ErrInvalidOperator).WithMessagef(l.errContextMessage())
 		case 7: // o
 			if ch == 'o' {
 				state = 8
 				break
 			}
-			return "", ErrInvalidOperator
+			return "", exception.NewFromErr(ErrInvalidOperator).WithMessagef(l.errContextMessage())
 		case 8: // t
 			if ch == 't' {
 				state = 9
 				break
 			}
-			return "", ErrInvalidOperator
+			return "", exception.NewFromErr(ErrInvalidOperator).WithMessagef(l.errContextMessage())
 		case 9: // i
 			if ch == 'i' {
 				state = 10
 				break
 			}
-			return "", ErrInvalidOperator
+			return "", exception.NewFromErr(ErrInvalidOperator).WithMessagef(l.errContextMessage())
 		case 10: // n
 			if ch == 'n' {
 				op = append(op, ch)
 				l.advance()
 				return string(op), nil
 			}
-			return "", ErrInvalidOperator
+			return "", exception.NewFromErr(ErrInvalidOperator).WithMessagef(l.errContextMessage())
 		}
 
 		op = append(op, ch)
@@ -296,8 +303,8 @@ func (l *Lexer) readWord() string {
 	// skip preceeding whitespace
 	l.skipWhiteSpace()
 
-	var word []byte
-	var ch byte
+	var word []rune
+	var ch rune
 	for {
 		ch = l.current()
 
@@ -320,8 +327,8 @@ func (l *Lexer) readCSV() (results []string) {
 	// skip preceeding whitespace
 	l.skipWhiteSpace()
 
-	var word []byte
-	var ch byte
+	var word []rune
+	var ch rune
 	for {
 		ch = l.current()
 		if ch == CloseParens {
@@ -339,7 +346,7 @@ func (l *Lexer) readCSV() (results []string) {
 
 		if ch == Comma {
 			results = append(results, string(word))
-			word = []byte{}
+			word = nil
 			l.advance()
 			continue
 		}
@@ -359,7 +366,7 @@ func (l *Lexer) skipWhiteSpace() {
 	if l.done() {
 		return
 	}
-	var ch byte
+	var ch rune
 	for {
 		ch = l.current()
 		if !l.isWhitespace(ch) {
@@ -372,7 +379,7 @@ func (l *Lexer) skipWhiteSpace() {
 	}
 }
 
-func (l *Lexer) skipToComma() (ch byte) {
+func (l *Lexer) skipToComma() (ch rune) {
 	if l.done() {
 		return
 	}
@@ -392,25 +399,25 @@ func (l *Lexer) skipToComma() (ch byte) {
 }
 
 // isWhitespace returns true if the rune is a space, tab, or newline.
-func (l *Lexer) isWhitespace(ch byte) bool {
+func (l *Lexer) isWhitespace(ch rune) bool {
 	return ch == Space || ch == Tab || ch == CarriageReturn || ch == NewLine
 }
 
 // isSpecialSymbol returns if the ch can be a token.
-func (l *Lexer) isSpecialSymbol(ch byte) bool {
-	switch ch {
-	case Equal, Bang, OpenParens, CloseParens, Comma:
-		return true
-	}
-	return false
+func (l *Lexer) isSpecialSymbol(ch rune) bool {
+	return isSelectorSymbol(ch)
 }
 
 // isTerminator returns if we've reached the end of the string
-func (l *Lexer) isTerminator(ch byte) bool {
+func (l *Lexer) isTerminator(ch rune) bool {
 	return ch == 0
 }
 
-// this needs a test la.
-func (l *Lexer) isAlpha(ch byte) bool {
-	return isLetter(ch)
+func (l *Lexer) isAlpha(ch rune) bool {
+	return isAlpha(ch)
+}
+
+// errContextMessage returns a context message for exceptions.
+func (l *Lexer) errContextMessage() string {
+	return fmt.Sprintf("for: '%s' at: %d", l.s, l.pos)
 }

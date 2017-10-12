@@ -32,8 +32,8 @@ func TestLexerIsAlpha(t *testing.T) {
 	assert.True(l.isAlpha('z'))
 	assert.True(l.isAlpha('A'))
 	assert.True(l.isAlpha('Z'))
+	assert.True(l.isAlpha('1'))
 
-	assert.False(l.isAlpha('1'))
 	assert.False(l.isAlpha('-'))
 	assert.False(l.isAlpha(' '))
 	assert.False(l.isAlpha('\n'))

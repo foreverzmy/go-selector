@@ -43,3 +43,19 @@ func TestCheckValue(t *testing.T) {
 	assert.NotNil(CheckValue("bar_baz_"))
 	assert.NotNil(CheckValue("_bar_baz_"))
 }
+
+func TestIsAlpha(t *testing.T) {
+	assert := assert.New(t)
+
+	assert.True(isAlpha('A'))
+	assert.True(isAlpha('a'))
+	assert.True(isAlpha('Z'))
+	assert.True(isAlpha('z'))
+	assert.True(isAlpha('0'))
+	assert.True(isAlpha('9'))
+	assert.True(isAlpha('함'))
+	assert.True(isAlpha('é'))
+	assert.False(isAlpha('-'))
+	assert.False(isAlpha('/'))
+	assert.False(isAlpha('~'))
+}

@@ -141,6 +141,18 @@ func TestParseValidate(t *testing.T) {
 	assert.NotNil(err)
 }
 
+func TestParseMultiByte(t *testing.T) {
+	assert := assert.New(t)
+
+	selector, err := Parse("함=수,목=록") // number=number, number=rock
+	assert.Nil(err)
+	assert.NotNil(selector)
+
+	typed, isTyped := selector.(And)
+	assert.True(isTyped)
+	assert.Len(typed, 2)
+}
+
 func BenchmarkParse(b *testing.B) {
 	valid := Labels{
 		"zoo":   "mar",

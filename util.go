@@ -2,38 +2,55 @@ package selector
 
 import (
 	"fmt"
+	"unicode"
+	"unicode/utf8"
+
+	"github.com/blendlabs/go-exception"
 )
 
 const (
+	// At is a common rune.
+	At = rune('@')
+	// Colon is a common rune.
+	Colon = rune(':')
 	// Dash is a common rune.
-	Dash = byte('-')
+	Dash = rune('-')
 	// Underscore  is a common rune.
-	Underscore = byte('_')
+	Underscore = rune('_')
 	// Dot is a common rune.
-	Dot = byte('.')
+	Dot = rune('.')
 	// ForwardSlash is a common rune.
-	ForwardSlash = byte('/')
+	ForwardSlash = rune('/')
 	// BackSlash is a common rune.
-	BackSlash = byte('\\')
+	BackSlash = rune('\\')
+	// BackTick is a common rune.
+	BackTick = rune('`')
 	// Bang is a common rune.
-	Bang = byte('!')
+	Bang = rune('!')
 	// Comma is a common rune.
-	Comma = byte(',')
+	Comma = rune(',')
+	// OpenBracket is a common rune.
+	OpenBracket = rune('[')
 	// OpenParens is a common rune.
-	OpenParens = byte('(')
+	OpenParens = rune('(')
+	// OpenCurly is a common rune.
+	OpenCurly = rune('{')
+	// CloseBracket is a common rune.
+	CloseBracket = rune(']')
 	// CloseParens is a common rune.
-	CloseParens = byte(')')
+	CloseParens = rune(')')
 	// Equal is a common rune.
-	Equal = byte('=')
-
+	Equal = rune('=')
 	// Space is a common rune.
-	Space = byte(' ')
+	Space = rune(' ')
 	// Tab is a common rune.
-	Tab = byte('\t')
+	Tab = rune('\t')
+	// Tilde is a common rune.
+	Tilde = rune('~')
 	// CarriageReturn is a common rune.
-	CarriageReturn = byte('\r')
+	CarriageReturn = rune('\r')
 	// NewLine is a common rune.
-	NewLine = byte('\n')
+	NewLine = rune('\n')
 )
 
 var (
@@ -87,12 +104,12 @@ func CheckKey(key string) (err error) {
 		return
 	}
 
-	var working []byte
+	var working []rune
 	var state int
-	var ch byte
-
-	for pos := 0; pos < keyLen; pos++ {
-		ch = key[pos]
+	var ch rune
+	var width int
+	for pos := 0; pos < keyLen; pos += width {
+		ch, width = utf8.DecodeRuneInString(key[pos:])
 		switch state {
 		case 0: // collect dns prefix or key
 			if ch == ForwardSlash {
@@ -127,20 +144,21 @@ func CheckValue(value string) error {
 func checkName(value string) (err error) {
 	valueLen := len(value)
 	var state int
-	var ch byte
-	for pos := 0; pos < valueLen; pos++ {
-		ch = value[pos]
+	var ch rune
+	var width int
+	for pos := 0; pos < valueLen; pos += width {
+		ch, width = utf8.DecodeRuneInString(value[pos:])
 		switch state {
-		case 0: //check prefix | suffix
-			if !(isLetter(ch) || isDigit(ch)) {
-				err = ErrKeyInvalidCharacter
+		case 0: //check prefix/suffix
+			if !isAlpha(ch) {
+				err = exception.NewFromErr(ErrKeyInvalidCharacter).WithMessagef("for: '%s' at: %d", value, pos)
 				return
 			}
 			state = 1
 			continue
 		case 1:
-			if !(ch == Dot || ch == Dash || ch == Underscore || ch == BackSlash || isLetter(ch) || isDigit(ch)) {
-				err = ErrKeyInvalidCharacter
+			if !(isNameSymbol(ch) || ch == BackSlash || isAlpha(ch)) {
+				err = exception.NewFromErr(ErrKeyInvalidCharacter).WithMessagef("for: '%s' at: %d", value, pos)
 				return
 			}
 			if pos == valueLen-2 {
@@ -155,31 +173,32 @@ func checkName(value string) (err error) {
 func checkDNS(value string) (err error) {
 	valueLen := len(value)
 	if valueLen == 0 {
-		err = ErrKeyDNSPrefixEmpty
+		err = exception.Wrap(ErrKeyDNSPrefixEmpty)
 		return
 	}
 	if valueLen > MaxDNSPrefixLen {
-		err = ErrKeyDNSPrefixTooLong
+		err = exception.Wrap(ErrKeyDNSPrefixTooLong)
 		return
 	}
 	var state int
-	var ch byte
-	for pos := 0; pos < valueLen; pos++ {
-		ch = value[pos]
+	var ch rune
+	var width int
+	for pos := 0; pos < valueLen; pos += width {
+		ch, width = utf8.DecodeRuneInString(value[pos:])
 		switch state {
 		case 0: //check prefix | suffix
-			if !(isLetter(ch) || isDigit(ch)) {
-				return ErrKeyInvalidCharacter
+			if !isAlpha(ch) {
+				return exception.NewFromErr(ErrKeyInvalidCharacter).WithMessagef("for: '%s' at: %d", value, pos)
 			}
 			state = 1
 			continue
 		case 1:
-			if ch == Dot || ch == Dash || ch == Underscore {
+			if isNameSymbol(ch) {
 				state = 2
 				continue
 			}
-			if !(isLetter(ch) || isDigit(ch)) {
-				err = ErrKeyInvalidCharacter
+			if !isAlpha(ch) {
+				err = exception.NewFromErr(ErrKeyInvalidCharacter).WithMessagef("for: '%s' at: %d", value, pos)
 				return
 			}
 			if pos == valueLen-2 {
@@ -187,8 +206,8 @@ func checkDNS(value string) (err error) {
 			}
 			continue
 		case 2: // we've hit a dot, dash, or underscore that can't repeat
-			if !(isLetter(ch) || isDigit(ch)) {
-				err = ErrKeyInvalidCharacter
+			if !isAlpha(ch) {
+				err = exception.NewFromErr(ErrKeyInvalidCharacter).WithMessagef("for: '%s' at: %d", value, pos)
 				return
 			}
 			if pos == valueLen-2 {
@@ -201,10 +220,33 @@ func checkDNS(value string) (err error) {
 	return nil
 }
 
-func isLetter(ch byte) bool {
-	return (int(ch) >= int('A') && int(ch) <= int('Z')) || (int(ch) >= int('a') && int(ch) <= int('z'))
+func isWhitespace(ch rune) bool {
+	return unicode.IsSpace(ch)
 }
 
-func isDigit(ch byte) bool {
-	return int(ch) >= int('0') && int(ch) <= int('9')
+func isSelectorSymbol(ch rune) bool {
+	switch ch {
+	case Equal, Bang, OpenParens, CloseParens, Comma:
+		return true
+	}
+	return false
+}
+
+func isNameSymbol(ch rune) bool {
+	switch ch {
+	case Dot, Dash, Underscore:
+		return true
+	}
+	return false
+}
+
+func isSymbol(ch rune) bool {
+	return (int(ch) >= int(Bang) && int(ch) <= int(ForwardSlash)) ||
+		(int(ch) >= int(Colon) && int(ch) <= int(At)) ||
+		(int(ch) >= int(OpenBracket) && int(ch) <= int(BackTick)) ||
+		(int(ch) >= int(OpenCurly) && int(ch) <= int(Tilde))
+}
+
+func isAlpha(ch rune) bool {
+	return !isWhitespace(ch) && !unicode.IsControl(ch) && !isSymbol(ch)
 }
