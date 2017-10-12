@@ -2,6 +2,7 @@ go-selector
 ===========
 
 [![Build Status](https://travis-ci.org/blendlabs/go-selector.svg?branch=master)](https://travis-ci.org/blendlabs/go-selector)
+[![Go Report Card](https://goreportcard.com/badge/github.com/blendlabs/go-selector)](https://goreportcard.com/report/github.com/blendlabs/go-selector)
 
 Selector is a library that matches as closely as possible the intent and semantics of kubernetes selectors.
 
