@@ -156,12 +156,12 @@ func (l *Lexer) done() bool {
 	return l.pos == len(l.s)
 }
 
-// mark sets a mark
+// mark sets a mark at the current position.
 func (l *Lexer) mark() {
 	l.m = l.pos
 }
 
-// popMark moves the cursor back to the previous mark
+// popMark moves the cursor back to the previous mark.
 func (l *Lexer) popMark() {
 	if l.m > 0 {
 		l.pos = l.m
@@ -169,8 +169,7 @@ func (l *Lexer) popMark() {
 	l.m = 0
 }
 
-// read return the character currently lexed
-// increment the position and check the buffer overflow
+// read returns the rune currently lexed, and advances the position.
 func (l *Lexer) read() (r rune) {
 	var width int
 	if l.pos < len(l.s) {
@@ -180,13 +179,13 @@ func (l *Lexer) read() (r rune) {
 	return r
 }
 
-// current returns the byte a the current position.
+// current returns the rune at the current position.
 func (l *Lexer) current() (r rune) {
 	r, _ = utf8.DecodeRuneInString(l.s[l.pos:])
 	return
 }
 
-// advance moves the cursor forward one character.
+// advance moves the cursor forward one rune.
 func (l *Lexer) advance() {
 	if l.pos < len(l.s) {
 		_, width := utf8.DecodeRuneInString(l.s[l.pos:])
@@ -194,7 +193,7 @@ func (l *Lexer) advance() {
 	}
 }
 
-// unread moves the cursor back a character.
+// unread moves the cursor back a rune.
 func (l *Lexer) prev() {
 	if l.pos > 0 {
 		l.pos--
@@ -204,7 +203,7 @@ func (l *Lexer) prev() {
 // readOp reads a valid operator.
 // valid operators include:
 // [ =, ==, !=, in, notin ]
-// errors if it doesn't read one of the above.
+// errors if it doesn't read one of the above, or there is another structural issue.
 func (l *Lexer) readOp() (string, error) {
 	// skip preceding whitespace
 	l.skipWhiteSpace()
