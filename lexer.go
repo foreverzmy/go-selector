@@ -1,7 +1,6 @@
 package selector
 
 import (
-	"fmt"
 	"strings"
 	"unicode/utf8"
 
@@ -89,7 +88,7 @@ func (l *Lexer) Lex() (Selector, error) {
 		case OpNotIn:
 			selector = l.lift(selector, l.notIn(key))
 		default:
-			return nil, exception.NewFromErr(ErrInvalidOperator).WithMessagef(l.errContextMessage())
+			return nil, ErrInvalidOperator
 		}
 
 		b = l.skipToComma()
@@ -106,7 +105,7 @@ func (l *Lexer) Lex() (Selector, error) {
 			break
 		}
 
-		return nil, exception.NewFromErr(ErrInvalidSelector).WithMessagef(l.errContextMessage())
+		return nil, ErrInvalidSelector
 	}
 
 	err = selector.Validate()
@@ -236,7 +235,7 @@ func (l *Lexer) readOp() (string, error) {
 				state = 7
 				break
 			}
-			return "", exception.NewFromErr(ErrInvalidOperator).WithMessagef(l.errContextMessage())
+			return "", ErrInvalidOperator
 		case 1: // =
 			if l.isWhitespace(ch) || l.isAlpha(ch) {
 				return string(op), nil
@@ -246,46 +245,46 @@ func (l *Lexer) readOp() (string, error) {
 				l.advance()
 				return string(op), nil
 			}
-			return "", exception.NewFromErr(ErrInvalidOperator).WithMessagef(l.errContextMessage())
+			return "", ErrInvalidOperator
 		case 2: // !
 			if ch == Equal {
 				op = append(op, ch)
 				l.advance()
 				return string(op), nil
 			}
-			return "", exception.NewFromErr(ErrInvalidOperator).WithMessagef(l.errContextMessage())
+			return "", ErrInvalidOperator
 		case 6: // in
 			if ch == 'n' {
 				op = append(op, ch)
 				l.advance()
 				return string(op), nil
 			}
-			return "", exception.NewFromErr(ErrInvalidOperator).WithMessagef(l.errContextMessage())
+			return "", ErrInvalidOperator
 		case 7: // o
 			if ch == 'o' {
 				state = 8
 				break
 			}
-			return "", exception.NewFromErr(ErrInvalidOperator).WithMessagef(l.errContextMessage())
+			return "", ErrInvalidOperator
 		case 8: // t
 			if ch == 't' {
 				state = 9
 				break
 			}
-			return "", exception.NewFromErr(ErrInvalidOperator).WithMessagef(l.errContextMessage())
+			return "", ErrInvalidOperator
 		case 9: // i
 			if ch == 'i' {
 				state = 10
 				break
 			}
-			return "", exception.NewFromErr(ErrInvalidOperator).WithMessagef(l.errContextMessage())
+			return "", ErrInvalidOperator
 		case 10: // n
 			if ch == 'n' {
 				op = append(op, ch)
 				l.advance()
 				return string(op), nil
 			}
-			return "", exception.NewFromErr(ErrInvalidOperator).WithMessagef(l.errContextMessage())
+			return "", ErrInvalidOperator
 		}
 
 		op = append(op, ch)
@@ -415,9 +414,4 @@ func (l *Lexer) isTerminator(ch rune) bool {
 
 func (l *Lexer) isAlpha(ch rune) bool {
 	return isAlpha(ch)
-}
-
-// errContextMessage returns a context message for exceptions.
-func (l *Lexer) errContextMessage() string {
-	return fmt.Sprintf("for: '%s' at: %d", l.s, l.pos)
 }

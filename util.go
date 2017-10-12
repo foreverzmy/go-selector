@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"unicode"
 	"unicode/utf8"
-
-	"github.com/blendlabs/go-exception"
 )
 
 const (
@@ -151,14 +149,14 @@ func checkName(value string) (err error) {
 		switch state {
 		case 0: //check prefix/suffix
 			if !isAlpha(ch) {
-				err = exception.NewFromErr(ErrKeyInvalidCharacter).WithMessagef("for: '%s' at: %d", value, pos)
+				err = ErrKeyInvalidCharacter
 				return
 			}
 			state = 1
 			continue
 		case 1:
 			if !(isNameSymbol(ch) || ch == BackSlash || isAlpha(ch)) {
-				err = exception.NewFromErr(ErrKeyInvalidCharacter).WithMessagef("for: '%s' at: %d", value, pos)
+				err = ErrKeyInvalidCharacter
 				return
 			}
 			if pos == valueLen-2 {
@@ -173,11 +171,11 @@ func checkName(value string) (err error) {
 func checkDNS(value string) (err error) {
 	valueLen := len(value)
 	if valueLen == 0 {
-		err = exception.Wrap(ErrKeyDNSPrefixEmpty)
+		err = ErrKeyDNSPrefixEmpty
 		return
 	}
 	if valueLen > MaxDNSPrefixLen {
-		err = exception.Wrap(ErrKeyDNSPrefixTooLong)
+		err = ErrKeyDNSPrefixTooLong
 		return
 	}
 	var state int
@@ -188,7 +186,7 @@ func checkDNS(value string) (err error) {
 		switch state {
 		case 0: //check prefix | suffix
 			if !isAlpha(ch) {
-				return exception.NewFromErr(ErrKeyInvalidCharacter).WithMessagef("for: '%s' at: %d", value, pos)
+				return ErrKeyInvalidCharacter
 			}
 			state = 1
 			continue
@@ -198,7 +196,7 @@ func checkDNS(value string) (err error) {
 				continue
 			}
 			if !isAlpha(ch) {
-				err = exception.NewFromErr(ErrKeyInvalidCharacter).WithMessagef("for: '%s' at: %d", value, pos)
+				err = ErrKeyInvalidCharacter
 				return
 			}
 			if pos == valueLen-2 {
@@ -207,7 +205,7 @@ func checkDNS(value string) (err error) {
 			continue
 		case 2: // we've hit a dot, dash, or underscore that can't repeat
 			if !isAlpha(ch) {
-				err = exception.NewFromErr(ErrKeyInvalidCharacter).WithMessagef("for: '%s' at: %d", value, pos)
+				err = ErrKeyInvalidCharacter
 				return
 			}
 			if pos == valueLen-2 {
