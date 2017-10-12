@@ -6,6 +6,19 @@ import (
 	"github.com/blendlabs/go-assert"
 )
 
+func TestParseInvalid(t *testing.T) {
+	assert := assert.New(t)
+
+	_, err := Parse("x==a==b")
+	assert.NotNil(err)
+
+	_, err = Parse("!x==b")
+	assert.NotNil(err)
+
+	_, err = Parse("x<b")
+	assert.NotNil(err)
+}
+
 func TestParseEquals(t *testing.T) {
 	assert := assert.New(t)
 
