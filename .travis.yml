@@ -4,11 +4,6 @@ go:
 
 sudo: false
 
-cache:
-  directories:
-    - $GOPATH/src
-    - $GOPATH/pkg
-
 notifications:
   slack:
     rooms:
