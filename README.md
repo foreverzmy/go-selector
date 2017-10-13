@@ -6,7 +6,7 @@ go-selector
 
 Selector is a library that matches as closely as possible the intent and semantics of kubernetes selectors.
 
-It supports unicode in names (such as `함=수`), but does not support escaped symbols (such as k=\,).
+It supports unicode in names (such as `함=수`), but does not support escaped symbols (such as `k=\,`).
 
 ## Goals / Purpose
 
