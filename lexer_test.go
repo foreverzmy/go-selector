@@ -151,7 +151,8 @@ func TestLexerReadCSV(t *testing.T) {
 	assert := assert.New(t)
 
 	l := &Lexer{s: "(bar, baz, biz)"}
-	words := l.readCSV()
+	words, err := l.readCSV()
+	assert.Nil(err)
 	assert.Len(words, 3, strings.Join(words, ","))
 	assert.Equal("bar", words[0])
 	assert.Equal("baz", words[1])
@@ -159,29 +160,32 @@ func TestLexerReadCSV(t *testing.T) {
 	assert.True(l.done())
 
 	l = &Lexer{s: "(bar, buzz, baz"}
-	words = l.readCSV()
-	assert.Len(words, 3)
-	assert.Equal("bar", words[0])
-	assert.Equal("buzz", words[1])
-	assert.Equal("baz", words[2])
-	assert.True(l.done())
+	words, err = l.readCSV()
+	assert.NotNil(err)
 
 	l = &Lexer{s: "()"}
-	words = l.readCSV()
+	words, err = l.readCSV()
+	assert.Nil(err)
 	assert.Empty(words)
 	assert.True(l.done())
 
 	l = &Lexer{s: "(), thing=after"}
-	words = l.readCSV()
+	words, err = l.readCSV()
+	assert.Nil(err)
 	assert.Empty(words)
 	assert.Equal(",", string(l.current()))
 
 	l = &Lexer{s: "(foo, bar), buzz=light"}
-	words = l.readCSV()
+	words, err = l.readCSV()
+	assert.Nil(err)
 	assert.Len(words, 2)
 	assert.Equal("foo", words[0])
 	assert.Equal("bar", words[1])
 	assert.Equal(",", string(l.current()))
+
+	l = &Lexer{s: "(test, space are bad)"}
+	words, err = l.readCSV()
+	assert.NotNil(err)
 }
 
 func TestLexerHasKey(t *testing.T) {

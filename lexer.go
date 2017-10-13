@@ -76,15 +76,32 @@ func (l *Lexer) Lex() (Selector, error) {
 			return nil, err
 		}
 
+		var subSelector Selector
 		switch op {
 		case OpEquals, OpDoubleEquals:
-			selector = l.lift(selector, l.equals(key))
+			subSelector, err = l.equals(key)
+			if err != nil {
+				return nil, err
+			}
+			selector = l.lift(selector, subSelector)
 		case OpNotEquals:
-			selector = l.lift(selector, l.notEquals(key))
+			subSelector, err = l.notEquals(key)
+			if err != nil {
+				return nil, err
+			}
+			selector = l.lift(selector, subSelector)
 		case OpIn:
-			selector = l.lift(selector, l.in(key))
+			subSelector, err = l.in(key)
+			if err != nil {
+				return nil, err
+			}
+			selector = l.lift(selector, subSelector)
 		case OpNotIn:
-			selector = l.lift(selector, l.notIn(key))
+			subSelector, err = l.notIn(key)
+			if err != nil {
+				return nil, err
+			}
+			selector = l.lift(selector, subSelector)
 		default:
 			return nil, ErrInvalidOperator
 		}
@@ -133,22 +150,30 @@ func (l *Lexer) notHasKey(key string) Selector {
 	return NotHasKey(key)
 }
 
-func (l *Lexer) equals(key string) Selector {
+func (l *Lexer) equals(key string) (Selector, error) {
 	value := l.readWord()
-	return Equals{Key: key, Value: value}
+	return Equals{Key: key, Value: value}, nil
 }
 
-func (l *Lexer) notEquals(key string) Selector {
+func (l *Lexer) notEquals(key string) (Selector, error) {
 	value := l.readWord()
-	return NotEquals{Key: key, Value: value}
+	return NotEquals{Key: key, Value: value}, nil
 }
 
-func (l *Lexer) in(key string) Selector {
-	return In{Key: key, Values: l.readCSV()}
+func (l *Lexer) in(key string) (Selector, error) {
+	csv, err := l.readCSV()
+	if err != nil {
+		return nil, err
+	}
+	return In{Key: key, Values: csv}, nil
 }
 
-func (l *Lexer) notIn(key string) Selector {
-	return NotIn{Key: key, Values: l.readCSV()}
+func (l *Lexer) notIn(key string) (Selector, error) {
+	csv, err := l.readCSV()
+	if err != nil {
+		return nil, err
+	}
+	return NotIn{Key: key, Values: csv}, nil
 }
 
 // done indicates the cursor is past the usable length of the string.
@@ -319,41 +344,115 @@ func (l *Lexer) readWord() string {
 	}
 }
 
-func (l *Lexer) readCSV() (results []string) {
+func (l *Lexer) readCSV() (results []string, err error) {
 	// skip preceding whitespace
 	l.skipWhiteSpace()
 
 	var word []rune
 	var ch rune
+	var state int
+
 	for {
 		ch = l.current()
-		if ch == CloseParens {
-			if len(word) > 0 {
-				results = append(results, string(word))
-			}
-			l.advance()
-			return
-		}
 
-		if ch == OpenParens || l.isWhitespace(ch) {
-			l.advance()
-			continue
-		}
-
-		if ch == Comma {
-			results = append(results, string(word))
-			word = nil
-			l.advance()
-			continue
-		}
-
-		word = append(word, ch)
-		l.advance()
 		if l.done() {
-			if len(word) > 0 {
-				results = append(results, string(word))
-			}
+			err = ErrInvalidSelector
 			return
+		}
+
+		switch state {
+
+		case 0: // leading paren
+
+			if ch == OpenParens {
+				state = 2 // spaces or alphas
+				l.advance()
+				continue
+			}
+
+		case 1: // alphas (in word)
+
+			if ch == Comma {
+				if len(word) > 0 {
+					results = append(results, string(word))
+					word = nil
+				}
+				state = 2 // from comma
+				l.advance()
+				continue
+			}
+
+			if ch == CloseParens {
+				if len(word) > 0 {
+					results = append(results, string(word))
+				}
+				l.advance()
+				return
+			}
+
+			if l.isWhitespace(ch) {
+				state = 3
+				l.advance()
+				continue
+			}
+
+			if !l.isAlpha(ch) {
+				err = ErrInvalidSelector
+				return
+			}
+
+			word = append(word, ch)
+			l.advance()
+			continue
+
+		case 2: //whitespace after symbol
+
+			if ch == CloseParens {
+				l.advance()
+				return
+			}
+
+			if l.isWhitespace(ch) {
+				l.advance()
+				continue
+			}
+
+			if l.isAlpha(ch) {
+				state = 1
+				continue
+			}
+
+			err = ErrInvalidSelector
+			return
+
+		case 3: //whitespace after alpha
+
+			if ch == CloseParens {
+				if len(word) > 0 {
+					results = append(results, string(word))
+				}
+				l.advance()
+				return
+			}
+
+			if l.isWhitespace(ch) {
+				l.advance()
+				continue
+			}
+
+			if ch == Comma {
+				if len(word) > 0 {
+					results = append(results, string(word))
+					word = nil
+				}
+				l.advance()
+				state = 2
+				continue
+			}
+
+			err = ErrInvalidSelector
+			return
+
 		}
 	}
 }
