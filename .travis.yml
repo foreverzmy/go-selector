@@ -17,6 +17,7 @@ notifications:
 
 install:
   - go get -u github.com/blendlabs/go-assert
+  - go get -u k8s.io/apimachinery/pkg/util/validation
 
 script:
   - go vet
