@@ -417,6 +417,11 @@ func (l *Lexer) readCSV() (results []string, err error) {
 				continue
 			}
 
+			if ch == Comma {
+				l.advance()
+				continue
+			}
+
 			if l.isAlpha(ch) {
 				state = 1
 				continue

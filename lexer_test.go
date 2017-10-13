@@ -159,6 +159,15 @@ func TestLexerReadCSV(t *testing.T) {
 	assert.Equal("biz", words[2])
 	assert.True(l.done())
 
+	l = &Lexer{s: "(bar,baz,biz)"}
+	words, err = l.readCSV()
+	assert.Nil(err)
+	assert.Len(words, 3, strings.Join(words, ","))
+	assert.Equal("bar", words[0])
+	assert.Equal("baz", words[1])
+	assert.Equal("biz", words[2])
+	assert.True(l.done())
+
 	l = &Lexer{s: "(bar, buzz, baz"}
 	words, err = l.readCSV()
 	assert.NotNil(err)
