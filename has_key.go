@@ -5,10 +5,8 @@ type HasKey string
 
 // Matches returns the selector result.
 func (hk HasKey) Matches(labels Labels) bool {
-	if _, hasKey := labels[string(hk)]; hasKey {
-		return true
-	}
-	return false
+	_, hasKey := labels[string(hk)]
+	return hasKey
 }
 
 // Validate validates the selector.

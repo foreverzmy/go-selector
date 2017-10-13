@@ -31,6 +31,6 @@ package selector
 //  (5) A requirement with just !KEY requires that the KEY not exist.
 //
 func Parse(query string) (Selector, error) {
-	l := &Lexer{s: query}
-	return l.Lex()
+	l := &Parser{s: query}
+	return l.Parse()
 }

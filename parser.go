@@ -18,9 +18,8 @@ const (
 	OpNotIn = "notin"
 )
 
-// Lexer is the working engine of the semantic extraction for a selector.
-// It lets us work through a string with a cursor, with an optional mark we can refer back  to.
-type Lexer struct {
+// Parser parses a selector incrementally.
+type Parser struct {
 	// s stores the string to be tokenized
 	s string
 	// pos is the position currently tokenized
@@ -29,10 +28,10 @@ type Lexer struct {
 	m int
 }
 
-// Lex does the actual parsing.
-func (l *Lexer) Lex() (Selector, error) {
-	l.s = strings.TrimSpace(l.s)
-	if len(l.s) == 0 {
+// Parse does the actual parsing.
+func (p *Parser) Parse() (Selector, error) {
+	p.s = strings.TrimSpace(p.s)
+	if len(p.s) == 0 {
 		return nil, ErrEmptySelector
 	}
 
@@ -45,33 +44,33 @@ func (l *Lexer) Lex() (Selector, error) {
 	for {
 
 		// sniff the !haskey form
-		b = l.current()
+		b = p.current()
 		if b == Bang {
-			l.advance() // we aren't going to use the '!'
-			selector = l.lift(selector, l.notHasKey(l.readWord()))
-			if l.done() {
+			p.advance() // we aren't going to use the '!'
+			selector = p.lift(selector, p.notHasKey(p.readWord()))
+			if p.done() {
 				break
 			}
 			continue
 		}
 
 		// we're done peeking the first char
-		key := l.readWord()
+		key := p.readWord()
 
-		l.mark()
-		b = l.skipToComma()
-		if b == Comma || l.isTerminator(b) || l.done() {
-			selector = l.lift(selector, l.hasKey(key))
-			l.advance()
-			if l.done() {
+		p.mark()
+		b = p.skipToComma()
+		if b == Comma || p.isTerminator(b) || p.done() {
+			selector = p.lift(selector, p.hasKey(key))
+			p.advance()
+			if p.done() {
 				break
 			}
 			continue
 		} else {
-			l.popMark()
+			p.popMark()
 		}
 
-		op, err = l.readOp()
+		op, err = p.readOp()
 		if err != nil {
 			return nil, err
 		}
@@ -79,44 +78,44 @@ func (l *Lexer) Lex() (Selector, error) {
 		var subSelector Selector
 		switch op {
 		case OpEquals, OpDoubleEquals:
-			subSelector, err = l.equals(key)
+			subSelector, err = p.equals(key)
 			if err != nil {
 				return nil, err
 			}
-			selector = l.lift(selector, subSelector)
+			selector = p.lift(selector, subSelector)
 		case OpNotEquals:
-			subSelector, err = l.notEquals(key)
+			subSelector, err = p.notEquals(key)
 			if err != nil {
 				return nil, err
 			}
-			selector = l.lift(selector, subSelector)
+			selector = p.lift(selector, subSelector)
 		case OpIn:
-			subSelector, err = l.in(key)
+			subSelector, err = p.in(key)
 			if err != nil {
 				return nil, err
 			}
-			selector = l.lift(selector, subSelector)
+			selector = p.lift(selector, subSelector)
 		case OpNotIn:
-			subSelector, err = l.notIn(key)
+			subSelector, err = p.notIn(key)
 			if err != nil {
 				return nil, err
 			}
-			selector = l.lift(selector, subSelector)
+			selector = p.lift(selector, subSelector)
 		default:
 			return nil, ErrInvalidOperator
 		}
 
-		b = l.skipToComma()
+		b = p.skipToComma()
 		if b == Comma {
-			l.advance()
-			if l.done() {
+			p.advance()
+			if p.done() {
 				break
 			}
 			continue
 		}
 
 		// these two are effectively the same
-		if l.isTerminator(b) || l.done() {
+		if p.isTerminator(b) || p.done() {
 			break
 		}
 
@@ -132,7 +131,7 @@ func (l *Lexer) Lex() (Selector, error) {
 }
 
 // lift starts grouping selectors into a high level `and`, returning the aggregate selector.
-func (l *Lexer) lift(current, next Selector) Selector {
+func (p *Parser) lift(current, next Selector) Selector {
 	if current == nil {
 		return next
 	}
@@ -142,34 +141,34 @@ func (l *Lexer) lift(current, next Selector) Selector {
 	return And([]Selector{current, next})
 }
 
-func (l *Lexer) hasKey(key string) Selector {
+func (p *Parser) hasKey(key string) Selector {
 	return HasKey(key)
 }
 
-func (l *Lexer) notHasKey(key string) Selector {
+func (p *Parser) notHasKey(key string) Selector {
 	return NotHasKey(key)
 }
 
-func (l *Lexer) equals(key string) (Selector, error) {
-	value := l.readWord()
+func (p *Parser) equals(key string) (Selector, error) {
+	value := p.readWord()
 	return Equals{Key: key, Value: value}, nil
 }
 
-func (l *Lexer) notEquals(key string) (Selector, error) {
-	value := l.readWord()
+func (p *Parser) notEquals(key string) (Selector, error) {
+	value := p.readWord()
 	return NotEquals{Key: key, Value: value}, nil
 }
 
-func (l *Lexer) in(key string) (Selector, error) {
-	csv, err := l.readCSV()
+func (p *Parser) in(key string) (Selector, error) {
+	csv, err := p.readCSV()
 	if err != nil {
 		return nil, err
 	}
 	return In{Key: key, Values: csv}, nil
 }
 
-func (l *Lexer) notIn(key string) (Selector, error) {
-	csv, err := l.readCSV()
+func (p *Parser) notIn(key string) (Selector, error) {
+	csv, err := p.readCSV()
 	if err != nil {
 		return nil, err
 	}
@@ -177,51 +176,51 @@ func (l *Lexer) notIn(key string) (Selector, error) {
 }
 
 // done indicates the cursor is past the usable length of the string.
-func (l *Lexer) done() bool {
-	return l.pos == len(l.s)
+func (p *Parser) done() bool {
+	return p.pos == len(p.s)
 }
 
 // mark sets a mark at the current position.
-func (l *Lexer) mark() {
-	l.m = l.pos
+func (p *Parser) mark() {
+	p.m = p.pos
 }
 
 // popMark moves the cursor back to the previous mark.
-func (l *Lexer) popMark() {
-	if l.m > 0 {
-		l.pos = l.m
+func (p *Parser) popMark() {
+	if p.m > 0 {
+		p.pos = p.m
 	}
-	l.m = 0
+	p.m = 0
 }
 
 // read returns the rune currently lexed, and advances the position.
-func (l *Lexer) read() (r rune) {
+func (p *Parser) read() (r rune) {
 	var width int
-	if l.pos < len(l.s) {
-		r, width = utf8.DecodeRuneInString(l.s[l.pos:])
-		l.pos += width
+	if p.pos < len(p.s) {
+		r, width = utf8.DecodeRuneInString(p.s[p.pos:])
+		p.pos += width
 	}
 	return r
 }
 
 // current returns the rune at the current position.
-func (l *Lexer) current() (r rune) {
-	r, _ = utf8.DecodeRuneInString(l.s[l.pos:])
+func (p *Parser) current() (r rune) {
+	r, _ = utf8.DecodeRuneInString(p.s[p.pos:])
 	return
 }
 
 // advance moves the cursor forward one rune.
-func (l *Lexer) advance() {
-	if l.pos < len(l.s) {
-		_, width := utf8.DecodeRuneInString(l.s[l.pos:])
-		l.pos += width
+func (p *Parser) advance() {
+	if p.pos < len(p.s) {
+		_, width := utf8.DecodeRuneInString(p.s[p.pos:])
+		p.pos += width
 	}
 }
 
-// unread moves the cursor back a rune.
-func (l *Lexer) prev() {
-	if l.pos > 0 {
-		l.pos--
+// prev moves the cursor back a rune.
+func (p *Parser) prev() {
+	if p.pos > 0 {
+		p.pos--
 	}
 }
 
@@ -229,15 +228,15 @@ func (l *Lexer) prev() {
 // valid operators include:
 // [ =, ==, !=, in, notin ]
 // errors if it doesn't read one of the above, or there is another structural issue.
-func (l *Lexer) readOp() (string, error) {
+func (p *Parser) readOp() (string, error) {
 	// skip preceding whitespace
-	l.skipWhiteSpace()
+	p.skipWhiteSpace()
 
 	var state int
 	var ch rune
 	var op []rune
 	for {
-		ch = l.current()
+		ch = p.current()
 
 		switch state {
 		case 0: // initial state, determine what op we're reading for
@@ -259,26 +258,26 @@ func (l *Lexer) readOp() (string, error) {
 			}
 			return "", ErrInvalidOperator
 		case 1: // =
-			if l.isWhitespace(ch) || l.isAlpha(ch) || ch == Comma {
+			if p.isWhitespace(ch) || p.isAlpha(ch) || ch == Comma {
 				return string(op), nil
 			}
 			if ch == Equal {
 				op = append(op, ch)
-				l.advance()
+				p.advance()
 				return string(op), nil
 			}
 			return "", ErrInvalidOperator
 		case 2: // !
 			if ch == Equal {
 				op = append(op, ch)
-				l.advance()
+				p.advance()
 				return string(op), nil
 			}
 			return "", ErrInvalidOperator
 		case 6: // in
 			if ch == 'n' {
 				op = append(op, ch)
-				l.advance()
+				p.advance()
 				return string(op), nil
 			}
 			return "", ErrInvalidOperator
@@ -303,16 +302,16 @@ func (l *Lexer) readOp() (string, error) {
 		case 10: // n
 			if ch == 'n' {
 				op = append(op, ch)
-				l.advance()
+				p.advance()
 				return string(op), nil
 			}
 			return "", ErrInvalidOperator
 		}
 
 		op = append(op, ch)
-		l.advance()
+		p.advance()
 
-		if l.done() {
+		if p.done() {
 			return string(op), nil
 		}
 	}
@@ -320,42 +319,42 @@ func (l *Lexer) readOp() (string, error) {
 
 // readWord skips whitespace, then reads a word until whitespace or a token.
 // it will leave the cursor on the next char after the word, i.e. the space or token.
-func (l *Lexer) readWord() string {
+func (p *Parser) readWord() string {
 	// skip preceding whitespace
-	l.skipWhiteSpace()
+	p.skipWhiteSpace()
 
 	var word []rune
 	var ch rune
 	for {
-		ch = l.current()
+		ch = p.current()
 
-		if l.isWhitespace(ch) {
+		if p.isWhitespace(ch) {
 			return string(word)
 		}
-		if l.isSpecialSymbol(ch) {
+		if p.isSpecialSymbol(ch) {
 			return string(word)
 		}
 		word = append(word, ch)
-		l.advance()
+		p.advance()
 
-		if l.done() {
+		if p.done() {
 			return string(word)
 		}
 	}
 }
 
-func (l *Lexer) readCSV() (results []string, err error) {
+func (p *Parser) readCSV() (results []string, err error) {
 	// skip preceding whitespace
-	l.skipWhiteSpace()
+	p.skipWhiteSpace()
 
 	var word []rune
 	var ch rune
 	var state int
 
 	for {
-		ch = l.current()
+		ch = p.current()
 
-		if l.done() {
+		if p.done() {
 			err = ErrInvalidSelector
 			return
 		}
@@ -366,7 +365,7 @@ func (l *Lexer) readCSV() (results []string, err error) {
 
 			if ch == OpenParens {
 				state = 2 // spaces or alphas
-				l.advance()
+				p.advance()
 				continue
 			}
 
@@ -378,7 +377,7 @@ func (l *Lexer) readCSV() (results []string, err error) {
 					word = nil
 				}
 				state = 2 // from comma
-				l.advance()
+				p.advance()
 				continue
 			}
 
@@ -386,43 +385,43 @@ func (l *Lexer) readCSV() (results []string, err error) {
 				if len(word) > 0 {
 					results = append(results, string(word))
 				}
-				l.advance()
+				p.advance()
 				return
 			}
 
-			if l.isWhitespace(ch) {
+			if p.isWhitespace(ch) {
 				state = 3
-				l.advance()
+				p.advance()
 				continue
 			}
 
-			if !l.isAlpha(ch) {
+			if !p.isAlpha(ch) {
 				err = ErrInvalidSelector
 				return
 			}
 
 			word = append(word, ch)
-			l.advance()
+			p.advance()
 			continue
 
 		case 2: //whitespace after symbol
 
 			if ch == CloseParens {
-				l.advance()
+				p.advance()
 				return
 			}
 
-			if l.isWhitespace(ch) {
-				l.advance()
+			if p.isWhitespace(ch) {
+				p.advance()
 				continue
 			}
 
 			if ch == Comma {
-				l.advance()
+				p.advance()
 				continue
 			}
 
-			if l.isAlpha(ch) {
+			if p.isAlpha(ch) {
 				state = 1
 				continue
 			}
@@ -436,12 +435,12 @@ func (l *Lexer) readCSV() (results []string, err error) {
 				if len(word) > 0 {
 					results = append(results, string(word))
 				}
-				l.advance()
+				p.advance()
 				return
 			}
 
-			if l.isWhitespace(ch) {
-				l.advance()
+			if p.isWhitespace(ch) {
+				p.advance()
 				continue
 			}
 
@@ -450,7 +449,7 @@ func (l *Lexer) readCSV() (results []string, err error) {
 					results = append(results, string(word))
 					word = nil
 				}
-				l.advance()
+				p.advance()
 				state = 2
 				continue
 			}
@@ -462,57 +461,57 @@ func (l *Lexer) readCSV() (results []string, err error) {
 	}
 }
 
-func (l *Lexer) skipWhiteSpace() {
-	if l.done() {
+func (p *Parser) skipWhiteSpace() {
+	if p.done() {
 		return
 	}
 	var ch rune
 	for {
-		ch = l.current()
-		if !l.isWhitespace(ch) {
+		ch = p.current()
+		if !p.isWhitespace(ch) {
 			return
 		}
-		l.advance()
-		if l.done() {
+		p.advance()
+		if p.done() {
 			return
 		}
 	}
 }
 
-func (l *Lexer) skipToComma() (ch rune) {
-	if l.done() {
+func (p *Parser) skipToComma() (ch rune) {
+	if p.done() {
 		return
 	}
 	for {
-		ch = l.current()
+		ch = p.current()
 		if ch == Comma {
 			return
 		}
-		if !l.isWhitespace(ch) {
+		if !p.isWhitespace(ch) {
 			return
 		}
-		l.advance()
-		if l.done() {
+		p.advance()
+		if p.done() {
 			return
 		}
 	}
 }
 
 // isWhitespace returns true if the rune is a space, tab, or newline.
-func (l *Lexer) isWhitespace(ch rune) bool {
+func (p *Parser) isWhitespace(ch rune) bool {
 	return ch == Space || ch == Tab || ch == CarriageReturn || ch == NewLine
 }
 
-// isSpecialSymbol returns if the ch can be a token.
-func (l *Lexer) isSpecialSymbol(ch rune) bool {
+// isSpecialSymbol returns if the ch is on the selector symbol list.
+func (p *Parser) isSpecialSymbol(ch rune) bool {
 	return isSelectorSymbol(ch)
 }
 
 // isTerminator returns if we've reached the end of the string
-func (l *Lexer) isTerminator(ch rune) bool {
+func (p *Parser) isTerminator(ch rune) bool {
 	return ch == 0
 }
 
-func (l *Lexer) isAlpha(ch rune) bool {
+func (p *Parser) isAlpha(ch rune) bool {
 	return isAlpha(ch)
 }
