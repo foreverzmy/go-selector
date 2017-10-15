@@ -90,6 +90,21 @@ var (
 	MaxKeyTotalLen = MaxDNSPrefixLen + MaxKeyLen + 1
 )
 
+// ValidateLabels validates all the keys and values for the label set.
+func ValidateLabels(labels Labels) (err error) {
+	for key, value := range labels {
+		err = CheckKey(key)
+		if err != nil {
+			return
+		}
+		err = CheckValue(value)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
 // CheckKey validates a key.
 func CheckKey(key string) (err error) {
 	keyLen := len(key)
